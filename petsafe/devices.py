@@ -83,10 +83,15 @@ class DeviceSmartFeed:
 
         """
         messages = await self.get_messages_since()
-        for message in messages:
-            if message["message_type"] == "FEED_DONE":
-                return message
-        return None
+        feedings = [
+            message
+            for message in messages
+            if isinstance(message, dict)
+            and message.get("message_type") == "FEED_DONE"
+            and isinstance(message.get("payload"), dict)
+            and isinstance(message["payload"].get("time"), (int, float))
+        ]
+        return max(feedings, key=lambda message: message["payload"]["time"], default=None)
 
     async def feed(
         self, amount: int = 1, slow_feed: bool = None, update_data: bool = True
